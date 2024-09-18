@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Button, TextField, Dialog, DialogActions, DialogContent,
-  DialogTitle, IconButton
+  DialogTitle, IconButton, CircularProgress
 } from '@mui/material';
 import axios from 'axios';
 import EditIcon from '@mui/icons-material/Edit';
@@ -14,6 +14,7 @@ const CrudTable = () => {
   const [formData, setFormData] = useState({ name: '', description: '' });
   const [editMode, setEditMode] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [loading, setLoading] = useState(false);  // New state for loader
 
   // Fetch items from the database
   useEffect(() => {
@@ -43,27 +44,34 @@ const CrudTable = () => {
     setOpen(false);
     setFormData({ name: '', description: '' });
     setEditMode(false);
+    setLoading(false);  // Reset loading when dialog is closed
   };
 
   // Add a new item
   const handleAdd = async () => {
+    setLoading(true);  // Start loading
     try {
       await axios.post('https://crud-backend-ten-mu.vercel.app/api/items', formData);
       fetchItems();  // Refresh the items list
       handleClose();
     } catch (error) {
       console.error('Error adding item:', error);
+    } finally {
+      setLoading(false);  // Stop loading
     }
   };
 
   // Update an existing item
   const handleEdit = async () => {
+    setLoading(true);  // Start loading
     try {
       await axios.put(`https://crud-backend-ten-mu.vercel.app/api/items/${editId}`, formData);
       fetchItems();
       handleClose();
     } catch (error) {
       console.error('Error updating item:', error);
+    } finally {
+      setLoading(false);  // Stop loading
     }
   };
 
@@ -86,10 +94,9 @@ const CrudTable = () => {
   };
 
   return (
-
     <div>
       <h2>
-        CRUD App
+        Crud App 
       </h2>
       <Button variant="contained" color="primary" onClick={handleOpen}>
         Add Item
@@ -147,8 +154,8 @@ const CrudTable = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="secondary">Cancel</Button>
-          <Button onClick={editMode ? handleEdit : handleAdd} color="primary">
-            {editMode ? 'Update' : 'Add'}
+          <Button onClick={editMode ? handleEdit : handleAdd} color="primary" disabled={loading}>
+            {loading ? <CircularProgress size={24} /> : (editMode ? 'Update' : 'Add')}
           </Button>
         </DialogActions>
       </Dialog>
